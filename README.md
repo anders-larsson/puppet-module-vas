@@ -44,6 +44,18 @@ vas::nismaps_ou: 'ou=nismaps,dc=example,dc=com'
 vas::realm: 'realm.example.com'
 </pre>
 
+
+# Facts
+The module creates facts as below:
+- vas_usersallow - A list of entries in /etc/opt/quest/vas/users.allow.
+- vas_domain - The domain that the host belongs to.
+- vas_server_type - The server types (GC, DC, PDC).
+- vas_servers - List of servers that VAS is using for authentication.
+- vas_site - The AD-site that the host belongs to.
+- vas_version - The complete version-string for the vas-client.
+- vasmajversion - The Major version of the vas-client.
+
+
 # Parameters
 
 
@@ -462,11 +474,36 @@ prompt-ad-lockout-msg option in vas.conf. See VAS.CONF(5) for more info.
 
 - *Default*: 'UNSET'
 
+vas_conf_libdefaults_default_tgs_enctypes
+-----------------------------------------
+String to set value of default_tgs_enctypes in [libdefaults] vas.conf. See VAS.CONF(5) for more info.
+
+- *Default*: 'arcfour-hmac-md5'
+
+vas_conf_libdefaults_default_tkt_enctypes
+-----------------------------------------
+String to set value of default_tkt_enctypes in [libdefaults] vas.conf. See VAS.CONF(5) for more info.
+
+- *Default*: 'arcfour-hmac-md5'
+
+vas_conf_libdefaults_default_etypes
+-----------------------------------------
+String to set value of default_etypes in [libdefaults] vas.conf. See VAS.CONF(5) for more info.
+
+- *Default*: 'arcfour-hmac-md5'
+
 vas_conf_libdefaults_forwardable
 --------------------------------
 Boolean to set value of forwardable in [libdefaults] vas.conf. See VAS.CONF(5) for more info.
 
 - *Default*: true
+
+vas_conf_libdefaults_default_cc_name
+--------------------------------
+String to set where kerberos cache files should be stored (default on most systems is /tmp/krb5cc_${uid}).
+Example: FILE:/new/path/krb5cc_${uid}
+
+- *Default*: 'UNSET'
 
 vas_conf_vas_auth_uid_check_limit
 ---------------------------------
@@ -733,3 +770,75 @@ join_domain_controllers
 A string or an array with domain controllers to contact during the join process. Normally the servers for the domain will be automatically detected through DNS and LDAP lookups. By specifying this parameter vastool will contact the specified servers and only those servers during the join process. This can be useful if the machine being joined is not able to talk with all global Domain Controllers (e.g. due to firewalls). Note that this will have no effect after the join, where normal site discovery of servers will be made.
 
 - *Default*: 'UNSET'
+
+use_srv_infocache
+-----------------
+A bool to achieve the same thing as issuing "vastool configure vas libvas use-srv-info-cache <bool>"
+Only has any effect if set to false.
+
+- *Default*: 'UNSET'
+
+kdcs
+----
+An array of kdcs that are to be entered under the [realms] section
+If set has the same effect as issuing "vastool configure realm ericsson.se erisero01.ericsson.se erisero02.ericsson.se". (example)
+
+- *Default*: []
+
+kpasswd_servers
+---------------
+An array of kpasswd servers that are to be entered under the [realms] section
+Normally needs not be set unless you want something different than the value of kdcs (above).
+
+- *Default*: []
+
+kdc_port
+--------
+An integer containing the kdc port.
+Has no effect unless kdcs is populated with servernames.
+
+- *Default*: 88
+
+kpasswd_server_port
+-------------------
+An integer containing the kpasswd server port.
+Has no effect unless kpasswd_servers or kdcs is populated with servernames.
+
+- *Default*: 464
+
+# Ericsson Specific
+
+The following API is implemented within: https://gerrit.ericsson.se/#/admin/projects/eisluo/vasapi
+
+See documentation contained within that project and the available documentation
+in Confluence as reference: https://confluence.lmera.ericsson.se/display/LUOG/VAS+API
+
+api_enable
+----------
+A boolean to control, whether the API function is called. If called, the API
+will return a list of entries for the users.allow file. This result will be
+merged with whatever content is provided otherwise provided; i.e. it will be
+concatenated with the content created by parameters users_allow_entries and
+users_allow_hiera_merge.
+
+This is only intended to be used in enabled environments. You also need to
+register the puppet servers with the API instance to configure access.
+
+(For now (2018-03), those environments are E2C running in batch0 GIC environments.)
+
+If you enablethis parameter you need to provide the following two parameters as well.
+
+- *Default*: false
+
+api_users_allow_url
+-------------------
+The URL towards the API.
+
+- *Default*: undef
+
+api_token
+---------
+Security token for authenticated access to the API.
+
+- *Default*: undef
+

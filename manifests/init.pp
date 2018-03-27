@@ -69,6 +69,10 @@ class vas (
   $vas_conf_prompt_vas_ad_pw                            = '"Enter Windows password: "',
   $vas_conf_pam_vas_prompt_ad_lockout_msg               = 'UNSET',
   $vas_conf_libdefaults_forwardable                     = true,
+  $vas_conf_libdefaults_tgs_default_enctypes            = 'arcfour-hmac-md5',
+  $vas_conf_libdefaults_tkt_default_enctypes            = 'arcfour-hmac-md5',
+  $vas_conf_libdefaults_default_etypes                  = 'arcfour-hmac-md5',
+  $vas_conf_libdefaults_default_cc_name                 = 'UNSET',
   $vas_conf_vas_auth_uid_check_limit                    = 'UNSET',
   $vas_conf_vas_auth_allow_disconnected_auth            = 'UNSET',
   $vas_conf_vas_auth_expand_ac_groups                   = 'UNSET',
@@ -115,6 +119,11 @@ class vas (
   $domain_realms                                        = {},
   $join_domain_controllers                              = 'UNSET',
   $unjoin_vas                                           = false,
+  $use_srv_infocache                                    = 'UNSET',
+  $kdcs                                                 = [],
+  $kdc_port                                             = 88,
+  $kpasswd_servers                                      = [],
+  $kpasswd_server_port                                  = 464,
   $api_enable                                           = false,
   $api_users_allow_url                                  = undef,
   $api_token                                            = undef,
@@ -156,6 +165,10 @@ class vas (
   validate_string($computers_ou)
   validate_string($nismaps_ou)
 
+  validate_string($vas_conf_libdefaults_default_cc_name)
+  validate_string($vas_conf_libdefaults_default_etypes)
+  validate_string($vas_conf_libdefaults_tgs_default_enctypes)
+  validate_string($vas_conf_libdefaults_tkt_default_enctypes)
   validate_string($vas_conf_vasd_username_attr_name)
   validate_string($vas_conf_vasd_groupname_attr_name)
   validate_string($vas_conf_vasd_uid_number_attr_name)
@@ -380,6 +393,34 @@ class vas (
     $enable_group_policies_real = $enable_group_policies
   }
 
+  if $use_srv_infocache != 'UNSET' {
+    if type3x($use_srv_infocache) == 'boolean' {
+      $use_srv_infocache_bool = $use_srv_infocache
+    }
+    elsif type3x($use_srv_infocache) == 'string' {
+      $use_srv_infocache_bool = str2bool($use_srv_infocache)
+    }
+    else {
+      fail('use_srv_infocache is not a boolean nor a string. Valid values are <true> and <false>.')
+    }
+  } else {
+    $use_srv_infocache_bool = undef
+  }
+
+  validate_array($kdcs)
+  validate_array($kpasswd_servers)
+
+  validate_integer($kdc_port, 65535, 1)
+  validate_integer($kpasswd_server_port, 65535, 1)
+
+  $kdcs_real = join(suffix($kdcs, ":${kdc_port}"), ' ')
+
+  if empty($kpasswd_servers) {
+    $kpasswd_servers_real = join(suffix($kdcs, ":${kpasswd_server_port}"), ' ')
+  } else {
+    $kpasswd_servers_real = join(suffix($kpasswd_servers, ":${kpasswd_server_port}"), ' ')
+  }
+
   if is_string($api_enable) {
     $api_enable_real = str2bool($api_enable)
   } else {
@@ -489,7 +530,7 @@ class vas (
     $users_allow_entries_real1 = $users_allow_entries
   }
 
-  if $api_enable_real {
+  if $api_enable_real == true {
     $api_users_allow_entries = api_fetch($api_users_allow_url, $api_token)
 
     $users_allow_entries_real = concat($users_allow_entries_real1, $api_users_allow_entries)
