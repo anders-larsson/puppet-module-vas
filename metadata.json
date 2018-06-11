@@ -4,9 +4,9 @@
   "license": "Apache-2.0",
   "summary": "Manage VAS",
   "description": "Manage VAS - DELL Authentication Services / QAS / VAS",
-  "source": "https://github.com/Ericsson/puppet-module-vas.git",
-  "version": "0.27.0",
-  "project_page": "https://github.com/Ericsson/puppet-module-vas",
+  "source": "https://gerrit.ericsson.se/a/puppet/puppet-module-vas",
+  "version": "0.28.0",
+  "project_page": "https://gerrit.ericsson.se/#/admin/projects/puppet/puppet-module-vas",
   "requirements": [
     {
       "name": "puppet",
